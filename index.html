@@ -1,38 +1,504 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Storm Heads-Up</title>
-  <style>
-    body {
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      max-width: 640px;
-      margin: 4rem auto;
-      padding: 0 1.25rem;
-      line-height: 1.6;
-      color: #1c2733;
-      background: #f7f9fb;
-    }
-    h1 { font-size: 1.6rem; }
-    a { color: #1668b8; }
-    footer { margin-top: 3rem; font-size: 0.85rem; color: #5a6a7a; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Storm Heads-Up | Weather, with a to-do list.</title>
+<meta name="description" content="Heads-up nudges before storms, snow, ice, heat, fog, or high wind reach your home. Built on National Weather Service forecasts and alerts. Free on the App Store and Google Play.">
+<link rel="canonical" href="https://stormheadsup.github.io/">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Storm Heads-Up">
+<meta property="og:title" content="Storm Heads-Up | Weather, with a to-do list.">
+<meta property="og:description" content="A heads-up before the weather gets to your house, and one useful thing to do about it. Free on the App Store and Google Play.">
+<meta property="og:url" content="https://stormheadsup.github.io/">
+<meta property="og:image" content="https://stormheadsup.github.io/assets/og-card.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Storm Heads-Up | Weather, with a to-do list.">
+<meta name="twitter:description" content="A heads-up before the weather gets to your house, and one useful thing to do about it.">
+<meta name="twitter:image" content="https://stormheadsup.github.io/assets/og-card.jpg">
+
+<link rel="icon" href="assets/icon.webp" type="image/webp">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0a0f1f">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #0a0f1f;
+    --bg-2: #10182e;
+    --surface: #151e36;
+    --line: #26314f;
+    --text: #eaf0fb;
+    --muted: #98a6c4;
+    --accent: #5b6ef5;
+    --accent-soft: #8e9cff;
+    --warn: #f0836f;
+    --display: "Outfit", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --badge-h: 52px;
+    --wrap: 1080px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: var(--wrap);
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+    margin: 0;
+  }
+
+  a { color: var(--accent-soft); }
+  a:hover { color: #fff; }
+
+  /* ---------- hero ---------- */
+
+  .hero {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(3.5rem, 9vw, 6.5rem) 0 clamp(2.5rem, 6vw, 4rem);
+    background:
+      radial-gradient(90ch 60ch at 50% -20%, #23306a 0%, rgba(35, 48, 106, 0) 62%),
+      linear-gradient(180deg, #0d1428 0%, var(--bg) 100%);
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--line), transparent);
+  }
+
+  .hero-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.15rem;
+  }
+
+  .mark {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+  .mark img {
+    width: 52px;
+    height: 52px;
+    border-radius: 13px;
+    display: block;
+  }
+  .mark span {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 7vw, 4rem);
+    max-width: 18ch;
+    text-wrap: balance;
+  }
+
+  .lede {
+    max-width: 46ch;
+    margin: 0;
+    color: var(--muted);
+    font-size: clamp(1.02rem, 2.2vw, 1.2rem);
+    text-wrap: pretty;
+  }
+  .lede strong { color: var(--text); font-weight: 500; }
+
+  /* ---------- store badges ---------- */
+
+  .stores {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.9rem;
+    margin-top: 0.6rem;
+  }
+  .stores a {
+    display: inline-flex;
+    border-radius: 10px;
+    outline-offset: 4px;
+  }
+  .stores img { display: block; }
+
+  /* Apple's SVG is edge-to-edge. Google's PNG carries 41px of transparent
+     padding around a 564x168 badge, so scale it up and pull the padding
+     back in to land on the same optical height. */
+  .badge-apple { height: var(--badge-h); width: auto; }
+  .badge-play {
+    height: calc(var(--badge-h) * 250 / 168);
+    width: auto;
+    margin: calc(var(--badge-h) * -41 / 168);
+  }
+
+  .fineprint {
+    margin: 0.35rem 0 0;
+    font-size: 0.92rem;
+    color: var(--muted);
+  }
+
+  /* ---------- shelf ---------- */
+
+  .shelf-section { padding: clamp(2.5rem, 6vw, 4rem) 0; }
+
+  .shelf {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 0.5rem 1.5rem 1.5rem;
+    margin: 0 auto;
+    max-width: calc(var(--wrap) + 3rem);
+    scrollbar-color: var(--line) transparent;
+  }
+  .shelf::-webkit-scrollbar { height: 8px; }
+  .shelf::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border-radius: 99px;
+  }
+  .shelf::-webkit-scrollbar-track { background: transparent; }
+
+  .shelf img {
+    flex: 0 0 auto;
+    width: 236px;
+    height: auto;
+    aspect-ratio: 9 / 16;
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    scroll-snap-align: center;
+    background: var(--surface);
+  }
+
+  .shelf-hint {
+    text-align: center;
+    font-size: 0.88rem;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  /* ---------- features ---------- */
+
+  section.band { padding: clamp(3rem, 7vw, 5rem) 0; }
+  section.band.alt {
+    background: var(--bg-2);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  h2 {
+    font-size: clamp(1.6rem, 4vw, 2.3rem);
+    margin-bottom: 0.6rem;
+  }
+  .band > .wrap > p.sub {
+    color: var(--muted);
+    margin: 0 0 2.2rem;
+    max-width: 54ch;
+  }
+
+  .grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(258px, 1fr));
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 1.25rem 1.35rem;
+  }
+  .card h3 {
+    font-size: 1.06rem;
+    margin-bottom: 0.35rem;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+  .card h3 .ico {
+    font-size: 1.15rem;
+    line-height: 1;
+  }
+  .card p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.96rem;
+    line-height: 1.6;
+  }
+
+  /* ---------- honest ---------- */
+
+  .honest {
+    display: grid;
+    gap: 0.9rem 2.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .honest li {
+    padding-left: 1.6rem;
+    position: relative;
+    color: var(--muted);
+  }
+  .honest li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.66em;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .honest li strong {
+    color: var(--text);
+    font-weight: 600;
+    display: block;
+  }
+
+  /* ---------- disclaimer ---------- */
+
+  .notice {
+    border: 1px solid #4a2b2b;
+    background: #1d1420;
+    border-left: 3px solid var(--warn);
+    border-radius: 12px;
+    padding: 1.3rem 1.5rem;
+  }
+  .notice h2 {
+    font-size: 1.15rem;
+    color: var(--warn);
+    margin-bottom: 0.5rem;
+  }
+  .notice p {
+    margin: 0 0 0.75rem;
+    color: #d7c8cc;
+    font-size: 0.96rem;
+  }
+  .notice p:last-child { margin-bottom: 0; }
+
+  /* ---------- footer ---------- */
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 2.5rem 0 3.5rem;
+    font-size: 0.94rem;
+    color: var(--muted);
+  }
+  .foot-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1.6rem;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  .foot-row .sep { color: var(--line); }
+  footer p { margin: 0; max-width: 70ch; }
+  footer .credit { margin-top: 0.8rem; font-size: 0.88rem; }
+
+  @media (max-width: 560px) {
+    body { font-size: 16px; }
+    .shelf img { width: 205px; }
+    :root { --badge-h: 46px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { scroll-behavior: auto !important; }
+  }
+</style>
 </head>
 <body>
-  <h1>Storm Heads-Up</h1>
-  <p>Weather, with a to-do list. Heads-up nudges before storms, snow, ice,
-     heat, fog, or high wind reach your home, built on National Weather
-     Service forecasts and alerts.</p>
-  <p>Storm Heads-Up is an Android app, currently in testing on Google Play.</p>
-  <ul>
-    <li><a href="https://stormheadsup.github.io/stormheadsup-privacy/">Privacy policy</a></li>
-    <li>Contact: <a href="mailto:stormheadsup@gmail.com">stormheadsup@gmail.com</a></li>
-  </ul>
-  <footer>
-    <p>Storm Heads-Up is not an official warning system. Always follow
-       official warnings from the National Weather Service, NOAA Weather
-       Radio, Wireless Emergency Alerts, and your local emergency management.</p>
-  </footer>
+
+<header class="hero">
+  <div class="wrap hero-inner">
+    <div class="mark">
+      <img src="assets/icon.webp" width="52" height="52" alt="Storm Heads-Up app icon">
+      <span>Storm Heads-Up</span>
+    </div>
+
+    <h1>Weather, with a to-do list.</h1>
+
+    <p class="lede">
+      A heads-up before storms, snow, ice, heat, fog, or high wind reach your
+      home, plus <strong>one useful thing to do about it</strong>. Built on
+      National Weather Service forecasts and alerts.
+    </p>
+
+    <div class="stores">
+      <a href="https://apps.apple.com/app/id6794940643" rel="noopener">
+        <img class="badge-apple" src="assets/badge-app-store.svg" alt="Download Storm Heads-Up on the App Store">
+      </a>
+      <a href="https://play.google.com/store/apps/details?id=com.stormheadsup.app" rel="noopener">
+        <img class="badge-play" src="assets/badge-google-play.png" alt="Get Storm Heads-Up on Google Play">
+      </a>
+    </div>
+
+    <p class="fineprint">
+      Free, supported by a small banner ad. No account, no sign-up.
+      United States and territories.
+    </p>
+  </div>
+</header>
+
+<section class="shelf-section">
+  <div class="shelf">
+    <img src="assets/shot-1.webp" width="540" height="960" loading="lazy" decoding="async"
+         alt="Two Storm Heads-Up notifications on a lock screen: a thunderstorm heads-up telling you to cover the patio cushions before 2 AM, and a rain notice suggesting an umbrella and extra time on the road.">
+    <img src="assets/shot-2.webp" width="540" height="960" loading="lazy" decoding="async"
+         alt="The Heads-up tab showing current conditions for Greensburg, PA and a nudge card marked four hours away for thunderstorms expected around 2 AM.">
+    <img src="assets/shot-3.webp" width="540" height="960" loading="lazy" decoding="async"
+         alt="The hazard list showing thirteen tiles, from tornadoes and ice to fire weather and avalanche, each with a bell you can mute.">
+    <img src="assets/shot-4.webp" width="540" height="960" loading="lazy" decoding="async"
+         alt="Animated NOAA radar over Ohio and Michigan in base and composite modes, in-app and full screen.">
+    <img src="assets/shot-5.webp" width="540" height="960" loading="lazy" decoding="async"
+         alt="A flood warning opened on the radar map showing the full official National Weather Service text, including what, where, when, and impacts.">
+    <img src="assets/shot-6.webp" width="540" height="960" loading="lazy" decoding="async"
+         alt="The Cameras tab showing live FAA weather camera images near Juneau, Alaska and Honolulu, Hawaii.">
+    <img src="assets/shot-7.webp" width="540" height="960" loading="lazy" decoding="async"
+         alt="Settings showing notification toggles, lead time choices of four, two, and one hour, and a delivery health panel listing the last successful alert check.">
+  </div>
+  <p class="shelf-hint">Swipe or scroll to see more.</p>
+</section>
+
+<section class="band alt">
+  <div class="wrap">
+    <h2>What you get</h2>
+    <p class="sub">
+      Instead of drowning you in maps and numbers, Storm Heads-Up watches the
+      forecast for your home and taps you on the shoulder at the right moment.
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <h3><span class="ico" aria-hidden="true">🔔</span>Heads-up nudges</h3>
+        <p>Pick the hazards you care about and the lead times you want: 4 hours,
+           2 hours, or 1 hour out. Muting a hazard silences the buzz without
+           hiding the warning.</p>
+      </div>
+      <div class="card">
+        <h3><span class="ico" aria-hidden="true">⚠️</span>Official NWS alerts</h3>
+        <p>Watches, warnings, and advisories for your area with the full
+           official text, timing, and instructions. Warnings always come
+           through, even for muted hazards.</p>
+      </div>
+      <div class="card">
+        <h3><span class="ico" aria-hidden="true">🌪️</span>Severe weather outlook</h3>
+        <p>NOAA Storm Prediction Center risk for today, tomorrow, and the day
+           after, with tornado, wind, and hail odds when a day turns active.</p>
+      </div>
+      <div class="card">
+        <h3><span class="ico" aria-hidden="true">📡</span>Live radar</h3>
+        <p>Animated NOAA radar with official warning areas drawn on the map.
+           Tap a warning to read the full alert right there.</p>
+      </div>
+      <div class="card">
+        <h3><span class="ico" aria-hidden="true">📅</span>Forecast</h3>
+        <p>Hour by hour and day by day, straight from weather.gov, with a quiet
+           6 AM morning brief if you want one.</p>
+      </div>
+      <div class="card">
+        <h3><span class="ico" aria-hidden="true">📷</span>Weather cameras</h3>
+        <p>Nearby FAA weather cams for a real look at the sky, including the
+           fog, snow, and low cloud that radar simply cannot see.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <h2>Honest by design</h2>
+    <p class="sub">
+      A weather app should tell you when it does not know something.
+    </p>
+
+    <ul class="honest">
+      <li><strong>No account, nothing to sign up for.</strong>
+          Open it and it works.</li>
+      <li><strong>Your locations stay on your phone.</strong>
+          They are not uploaded anywhere.</li>
+      <li><strong>Stale data says so.</strong>
+          When a check fails, the app tells you instead of pretending the sky
+          is clear.</li>
+      <li><strong>Public sources only.</strong>
+          Weather, alerts, and radar from NWS, NOAA, and FAA, the same
+          services meteorologists use.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="band alt">
+  <div class="wrap">
+    <div class="notice">
+      <h2>Important: not an official warning system</h2>
+      <p>
+        Storm Heads-Up is a convenience tool that surfaces National Weather
+        Service (NWS/NOAA) forecasts and alerts with friendly, timed heads-up
+        notifications. It is not an official warning system. Data and
+        notifications can be delayed, interrupted, or wrong, whether by network
+        conditions, your device's battery and background restrictions, or
+        upstream outages.
+      </p>
+      <p>
+        Never rely on this app for life-safety decisions. Always follow official
+        warnings from the National Weather Service, NOAA Weather Radio, Wireless
+        Emergency Alerts, and your local emergency management.
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-row">
+      <a href="https://apps.apple.com/app/id6794940643" rel="noopener">App Store</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="https://play.google.com/store/apps/details?id=com.stormheadsup.app" rel="noopener">Google Play</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="https://stormheadsup.github.io/stormheadsup-privacy/">Privacy policy</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="mailto:stormheadsup@gmail.com">stormheadsup@gmail.com</a>
+    </div>
+
+    <p class="credit">
+      Weather, alerts, and radar from NOAA / National Weather Service. Weather
+      cameras from the FAA. Location search by GeoNames.org (CC BY 4.0).
+      Apple and the Apple logo are trademarks of Apple Inc. Google Play and the
+      Google Play logo are trademarks of Google LLC.
+    </p>
+  </div>
+</footer>
+
 </body>
 </html>
